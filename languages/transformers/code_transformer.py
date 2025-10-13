@@ -1,5 +1,5 @@
-from transformations.beautifier import CodeBeautifier
-from transformations.simplifier import CodeSimplifier
+from .transformations.beautifier import CodeBeautifier
+from .transformations.simplifier import CodeSimplifier
 
 class CodeTransformer:
     def __init__(self, code):

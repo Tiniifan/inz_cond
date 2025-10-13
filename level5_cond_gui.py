@@ -1,5 +1,6 @@
 import sys
 import os
+
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                               QHBoxLayout, QPushButton, QTextEdit, QLabel,
                               QMessageBox)
@@ -15,7 +16,7 @@ if level5_path not in sys.path:
 from level_5.condition.decoder import Level5ConditionDecoder
 from languages.c_language.c_codegenerator import CCodeGenerator
 from languages.squirrel_language.squirrel_codegenerator import SquirrelCodeGenerator
-
+from languages.transformers.code_transformer import CodeTransformer
 
 class CSyntaxHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for C language"""
@@ -62,7 +63,6 @@ class CSyntaxHighlighter(QSyntaxHighlighter):
         for pattern, fmt in self.highlighting_rules:
             for match in pattern.finditer(text):
                 self.setFormat(match.start(), match.end() - match.start(), fmt)
-
 
 class SquirrelSyntaxHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for Squirrel language"""
@@ -111,7 +111,6 @@ class SquirrelSyntaxHighlighter(QSyntaxHighlighter):
         for pattern, fmt in self.highlighting_rules:
             for match in pattern.finditer(text):
                 self.setFormat(match.start(), match.end() - match.start(), fmt)
-
 
 class Level5ConditionGUI(QMainWindow):
     def __init__(self):
@@ -299,9 +298,19 @@ class Level5ConditionGUI(QMainWindow):
                                 "Please paste Base64 encoded condition data in the right container.")
             return
         try:
+            # Decoding the conditions
             conditions = Level5ConditionDecoder.from_base64(base64_data)
+            
+            # Generator selection
             generator = CCodeGenerator(conditions) if self.current_language == "C" else SquirrelCodeGenerator(conditions)
+            
+            # Code generation
             code = generator.generate()
+  
+            # Beautify the generated code
+            transformer = CodeTransformer(code)
+            code = transformer.beautify()  
+            
             self.code_text.setPlainText(code)
         except Exception as e:
             QMessageBox.critical(self, "Conversion Failed",
@@ -311,14 +320,12 @@ class Level5ConditionGUI(QMainWindow):
         QMessageBox.information(self, "Not Implemented",
                                 "Code to Base64 conversion is not yet implemented.")
 
-
 def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     window = Level5ConditionGUI()
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
