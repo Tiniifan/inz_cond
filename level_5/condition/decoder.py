@@ -15,14 +15,13 @@ from binary_writer import BinaryDataWriter
 from logic import Level5Variable, Level5Condition, Level5VariableType, Level5VariableValue, Level5Comparator
 
 class Level5ConditionDecoder:
-    variable_counter = 0
-
     def __init__(self, data):
         self.reader = BinaryDataReader(data)
         self.sub_index = 0
         self.has_extended_operator = False
         self.extended_operator_type = None
         self.extended_operator_skip_count = 0
+        self.variable_counter = 0
 
     @staticmethod
     def from_base64(encoded_str):
@@ -149,8 +148,8 @@ class Level5ConditionDecoder:
             if self.extended_operator_type is not None:
                 self.extended_operator_skip_count += 1
 
-        vname = f"variable{Level5ConditionDecoder.variable_counter}"
-        Level5ConditionDecoder.variable_counter += 1
+        vname = f"variable{self.variable_counter}"
+        self.variable_counter += 1
         
         self.sub_index += 2
 
