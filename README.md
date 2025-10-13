@@ -53,7 +53,7 @@ The following functions are referenced in the generated code:
 | ---------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getGameSubPhase()`          | `CMND_GET_SUB_PHASE()`       | Returns the current game sub-phase.                                                                                                                                 |
 | `getLastGlobalBitFlag()`     | *(simulated function)*       | Custom function based on observed behavior: returns the last initialized bit flag (for example, if bit 1 and bit 10 are true, the last initialized bit flag is 10). |
-| `cmndGetGlobalBitFlag(flag)` | `CMND_GET_GLOBAL_BIT_FLAG()` | Returns true or false depending on whether the given bit flag is active.                                                                                            |
+| `getGlobalBitFlag(flag)` | `CMND_GET_GLOBAL_BIT_FLAG()` | Returns true or false depending on whether the given bit flag is active.                                                                                            |
 
 ## Game Compatibility
 - **Inazuma Eleven Go** ✅
