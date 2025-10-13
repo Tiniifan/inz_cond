@@ -17,13 +17,13 @@ Base64 → Hexadecimal → Human-readable code
 Base64:
 
 ```
-000000000f053598ee4b470001003205f67d5478
+AAAAAA8FNZjuS0cAAQAyBfZ9VHg=
 ```
 
 Hexadecimal:
 
 ```
-AAAAAA8FNZjuS0cAAQAyBfZ9VHg=
+000000000f053598ee4b470001003205f67d5478
 ```
 
 Human-readable code (C code):
