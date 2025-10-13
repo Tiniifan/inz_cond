@@ -1,1 +1,2 @@
 from .c_codegenerator import CCodeGenerator
+from .c_syntaxhighlighter import CSyntaxHighlighter

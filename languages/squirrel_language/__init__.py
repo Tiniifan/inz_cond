@@ -1,1 +1,2 @@
 from .squirrel_codegenerator import SquirrelCodeGenerator
+from .squirrel_syntaxhighlighter import SquirrelSyntaxHighlighter

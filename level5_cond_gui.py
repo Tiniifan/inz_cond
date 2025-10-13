@@ -1,116 +1,20 @@
-import sys
+import re
 import os
+import sys
+import base64
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                               QHBoxLayout, QPushButton, QTextEdit, QLabel,
                               QMessageBox)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QSyntaxHighlighter, QTextCharFormat, QColor
-import re
-import base64
-
-level5_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-if level5_path not in sys.path:
-    sys.path.insert(0, level5_path)
 
 from level_5.condition.decoder import Level5ConditionDecoder
 from languages.c_language.c_codegenerator import CCodeGenerator
+from languages.c_language.c_syntaxhighlighter import CSyntaxHighlighter
 from languages.squirrel_language.squirrel_codegenerator import SquirrelCodeGenerator
+from languages.squirrel_language.squirrel_syntaxhighlighter import SquirrelSyntaxHighlighter
 from languages.transformers.code_transformer import CodeTransformer
-
-class CSyntaxHighlighter(QSyntaxHighlighter):
-    """Syntax highlighter for C language"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.highlighting_rules = []
-        
-        keyword_format = QTextCharFormat()
-        keyword_format.setForeground(QColor("#569CD6"))
-        keyword_format.setFontWeight(QFont.Weight.Bold)
-        keywords = [
-            "bool", "int", "void", "if", "else", "return", "true", "false",
-            "while", "for", "do", "switch", "case", "break", "continue",
-            "struct", "typedef", "enum", "const", "static", "extern"
-        ]
-        for word in keywords:
-            pattern = f"\\b{word}\\b"
-            self.highlighting_rules.append((re.compile(pattern), keyword_format))
-        
-        function_format = QTextCharFormat()
-        function_format.setForeground(QColor("#DCDCAA"))
-        self.highlighting_rules.append((re.compile(r'\b[A-Za-z_][A-Za-z0-9_]*(?=\()'), function_format))
-        
-        number_format = QTextCharFormat()
-        number_format.setForeground(QColor("#B5CEA8"))
-        self.highlighting_rules.append((re.compile(r'\b[0-9]+\b'), number_format))
-        
-        string_format = QTextCharFormat()
-        string_format.setForeground(QColor("#CE9178"))
-        self.highlighting_rules.append((re.compile(r'"[^"\\]*(\\.[^"\\]*)*"'), string_format))
-        
-        comment_format = QTextCharFormat()
-        comment_format.setForeground(QColor("#6A9955"))
-        self.highlighting_rules.append((re.compile(r'//[^\n]*'), comment_format))
-        
-        variable_format = QTextCharFormat()
-        variable_format.setForeground(QColor("#9CDCFE"))
-        self.highlighting_rules.append((re.compile(r'\bvariable[0-9]+\b'), variable_format))
-        self.highlighting_rules.append((re.compile(r'\bflag_variable[0-9]+\b'), variable_format))
-        self.highlighting_rules.append((re.compile(r'\bresult\b'), variable_format))
-    
-    def highlightBlock(self, text):
-        for pattern, fmt in self.highlighting_rules:
-            for match in pattern.finditer(text):
-                self.setFormat(match.start(), match.end() - match.start(), fmt)
-
-class SquirrelSyntaxHighlighter(QSyntaxHighlighter):
-    """Syntax highlighter for Squirrel language"""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.highlighting_rules = []
-        
-        keyword_format = QTextCharFormat()
-        keyword_format.setForeground(QColor("#569CD6"))
-        keyword_format.setFontWeight(QFont.Weight.Bold)
-        keywords = [
-            "function", "local", "if", "else", "return", "true", "false",
-            "while", "for", "foreach", "in", "switch", "case", "break",
-            "continue", "class", "extends", "constructor", "this", "base",
-            "null", "typeof", "clone", "delete"
-        ]
-        for word in keywords:
-            pattern = f"\\b{word}\\b"
-            self.highlighting_rules.append((re.compile(pattern), keyword_format))
-        
-        function_format = QTextCharFormat()
-        function_format.setForeground(QColor("#DCDCAA"))
-        self.highlighting_rules.append((re.compile(r'\b[A-Z_][A-Z0-9_]*(?=\()'), function_format))
-        self.highlighting_rules.append((re.compile(r'\b[a-z_][A-Za-z0-9_]*(?=\()'), function_format))
-        
-        number_format = QTextCharFormat()
-        number_format.setForeground(QColor("#B5CEA8"))
-        self.highlighting_rules.append((re.compile(r'\b[0-9]+\b'), number_format))
-        
-        string_format = QTextCharFormat()
-        string_format.setForeground(QColor("#CE9178"))
-        self.highlighting_rules.append((re.compile(r'"[^"\\]*(\\.[^"\\]*)*"'), string_format))
-        
-        comment_format = QTextCharFormat()
-        comment_format.setForeground(QColor("#6A9955"))
-        self.highlighting_rules.append((re.compile(r'//[^\n]*'), comment_format))
-        
-        variable_format = QTextCharFormat()
-        variable_format.setForeground(QColor("#9CDCFE"))
-        self.highlighting_rules.append((re.compile(r'\bvariable[0-9]+\b'), variable_format))
-        self.highlighting_rules.append((re.compile(r'\bflag_variable[0-9]+\b'), variable_format))
-        self.highlighting_rules.append((re.compile(r'\bresult\b'), variable_format))
-    
-    def highlightBlock(self, text):
-        for pattern, fmt in self.highlighting_rules:
-            for match in pattern.finditer(text):
-                self.setFormat(match.start(), match.end() - match.start(), fmt)
 
 class Level5ConditionGUI(QMainWindow):
     def __init__(self):
