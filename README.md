@@ -1,12 +1,12 @@
-# Level5 Condition Converter
+# Inazuma Condition Parser
 
-`level5_condition` is a **Python tool** that converts the internal condition data used in Level-5 Nintendo 3DS games into **human-readable code**.
+`inz_cond` is a **Python tool** that converts the internal condition data used in Level-5 Nintendo 3DS games into **human-readable code**.  
 These conditions are used by the game engine to determine when characters, talk events, quests, or other in-game elements should appear.
 
 ## Overview
 
 Level-5 condition data is stored as **Base64-encoded binary**.
-Once decoded, the data represents a **hexadecimal byte sequence**, formatted in **big-endian** order.
+Once decoded, the data represents a **hexadecimal byte sequence**.
 
 Conversion process:
 
@@ -17,13 +17,13 @@ Base64 → Hexadecimal → Human-readable code
 Base64:
 
 ```
-AAAAAA8FNZjuS0cAAQAyBfZ9VHg=
+AAAAAA8FNZjuS0cAAQAyBfZ9Sng=
 ```
 
 Hexadecimal:
 
 ```
-000000000f053598ee4b470001003205f67d5478
+00 00 00 00 0F 05 35 98 EE 4B 47 00 01 00 32 05 F6 7D 4A 78
 ```
 
 Human-readable code (C code):
@@ -32,10 +32,11 @@ Human-readable code (C code):
 bool condition()
 {
     bool result = false;
-    int variable0 = 100040020;
-    if (getGameSubPhase() >= variable0) {
+
+    if (getGameSubPhase() == 100040020) {
         result = true;
     }
+
     return result;
 }
 ```
@@ -46,14 +47,17 @@ Currently supported condition types:
 
 * `SubPhase`
 * `BitFlag`
+* `TeamFlag`
+* `HaveItem`
 
 The following functions are referenced in the generated code:
 
 | Function                     | Game Command (CMND)          | Description                                                                                                                                                         |
 | ---------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getGameSubPhase()`          | `CMND_GET_SUB_PHASE()`       | Returns the current game sub-phase.                                                                                                                                 |
-| `getLastGlobalBitFlag()`     | *(simulated function)*       | Custom function based on observed behavior: returns the last initialized bit flag (for example, if bit 1 and bit 10 are true, the last initialized bit flag is 10). |
-| `getGlobalBitFlag(flag)` | `CMND_GET_GLOBAL_BIT_FLAG()` | Returns true or false depending on whether the given bit flag is active.                                                                                            |
+| `getGlobalBitFlag(flag)`     | `CMND_GET_GLOBAL_BIT_FLAG()` | Returns true or false depending on whether the given bit flag is active.                                                                                            |
+| `getTeamBitFlag(flag)`       | `Doesn't exist`              | Returns true or false depending on whether the team bit flag is active.                                                                                             |
+| `isHaveItem(itemID)`         | `CMND_IS_HAVE_ITEM()`        | Returns true or false depending on whether the item is owned.                                                                                                       |
 
 ## Game Compatibility
 - **Inazuma Eleven Go** ✅
@@ -62,32 +66,6 @@ The following functions are referenced in the generated code:
 
 * **C** (default)
 * **Squirrel**
-
-## Command Line Usage
-
-### Generate C code (default)
-
-```bash
-python level5_condition.py -d AAAAAA8FNZjuS0cAAQAyBfZ9VHg=
-```
-
-### Force C generation
-
-```bash
-python level5_condition.py -d AAAAAA8FNZjuS0cAAQAyBfZ9VHg= -c
-```
-
-### Generate Squirrel code
-
-```bash
-python level5_condition.py -d AAAAAA8FNZjuS0cAAQAyBfZ9VHg= -sq
-```
-
-## Graphical User Interface (GUI)
-
-A graphical version of the tool is available to easily decode and visualize the condition code.
-
-<img width="1394" height="826" alt="image" src="https://github.com/user-attachments/assets/7b4e6f0c-76a3-4b4c-9451-862e2d50d22f" />
 
 ## Installation
 
@@ -113,23 +91,43 @@ pip install -r requirements.txt
 
 ### Command Line
 
+#### Generate C code (default)
+
 ```bash
-python level5_condition.py -d AAAAAA8FNZjuS0cAAQAyBfZ9VHg=
+python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng=
 ```
 
-### GUI
+#### Force C generation
 
-1. Run the GUI:
+```bash
+python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -c
+```
 
-   ```bash
-   python level5_condition_gui.py
-   ```
-2. Paste the Base64 condition into the right text box.
-3. Click **Convert to Code**.
-4. Use **Clear** to reset both containers.
+#### Generate Squirrel code
+
+```bash
+python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -sq
+```
+
+## Graphical User Interface (GUI)
+
+A graphical version of the tool is available to easily decode and visualize the condition code.
+
+You can start the GUI using this command
+
+```bash
+python level5_condition_gui.py
+```
+
+<img width="1390" height="823" alt="image" src="https://github.com/user-attachments/assets/0df56417-f4a3-430d-8251-5e09825cbf1d" />
+
+Please note: you need PyQt6 to use this version
+
+## Special Thanks
+
+* [n123git](https://github.com/n123git) for giving me detailed explanations about the format. I recommend [his version of condition parser optimize for ykw](https://github.com/n123git/yw-cond)
 
 ## Notes
-
 * It's not possible to convert code to base64 at this time.
 * The tool can make mistakes, the logic was written by a human :)
 * This tool is intended for research and educational purposes
