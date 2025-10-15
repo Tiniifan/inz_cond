@@ -2,155 +2,149 @@ import os
 import sys
 import base64
 
-tools_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../tools"))
-if tools_path not in sys.path:
-    sys.path.insert(0, tools_path)
+# Add root path to sys.path
+root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
 
-level5_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
-if level5_path not in sys.path:
-    sys.path.insert(0, level5_path)
-
-from binary_reader import BinaryDataReader
-from binary_writer import BinaryDataWriter
-from logic import Level5Variable, Level5Condition, Level5VariableType, Level5VariableValue, Level5Comparator
+# Import from root
+from tools.binary_reader import BinaryDataReader
+from tools.binary_writer import BinaryDataWriter
+from level_5.condition.logic import *
 
 class Level5ConditionDecoder:
     def __init__(self, data):
         self.reader = BinaryDataReader(data)
-        self.sub_index = 0
-        self.has_extended_operator = False
-        self.extended_operator_type = None
-        self.extended_operator_skip_count = 0
-        self.variable_counter = 0
+        self.local_var_count = 0;
 
     @staticmethod
     def from_base64(encoded_str):
         decoded = base64.b64decode(encoded_str)
         parser = Level5ConditionDecoder(decoded)
-        return parser.read_conditions()
+        return parser._read_conditions()
 
-    def read_conditions(self):
+    def _read_conditions(self):
         self.reader.to_seek(0x04)
         block_length = self.reader.read_byte()
         sub_count = self.reader.read_byte()
-        
         variables = []
         conditions = []
-        operators = []
-
-        while self.sub_index < sub_count:
-            sub_header = self.reader.read_byte()
-                        
-            if sub_header == 0x35:
-                variables.append(self.read_memory_value())
-            elif sub_header == 0x32:
-                variables.append(self.read_custom_value())
-            elif sub_header == 0x6f:
-                operators.append(Level5Comparator.EqualInferior)
-                self.sub_index += 1
-            elif sub_header == 0x71:
-                operators.append(Level5Comparator.EqualInferior)
-                self.sub_index += 1
-
-            if len(variables) >= 2:
-                if len(operators) > 0:
-                    compare_operator = operators.pop(0)
-                else:
-                    compare_operator = Level5Comparator.EqualSuperior
+        current_block = []
+        
+        while self.reader.offset < self.reader.length:
+            keyword = self.reader.read_byte()
+            
+            if SymbolType.is_function(keyword):
+                function = self._read_function()
+                variables.append(function)
                 
-                if self.has_extended_operator:
-                    if len(variables) == 3: 
-                        left_var = variables.pop(0)
-                        right_conditions = []
+                # Special rule: if we have exactly 1 variable and it's GET_TEAM_BIT_FLAG, consume it immediately
+                if len(variables) == 1 and isinstance(variables[0], Level5Function):
+                    if variables[0].name == FunctionNameEnum.GET_TEAM_BIT_FLAG:
+                        self._create_implicit_condition(variables, current_block)
                         
-                        while len(variables) > 0:
-                            sub_var = variables.pop(0)
-                            sub_condition = Level5Condition(
-                                left_operator=sub_var,
-                                right_operator=None,
-                                compare_operator=compare_operator
-                            )
-                            right_conditions.append(sub_condition)
-                        
-                        condition = Level5Condition(
-                            left_operator=left_var,
-                            right_operator=right_conditions,
-                            compare_operator=compare_operator
-                        )
-                        conditions.append(condition)
-                        
-                        self.has_extended_operator = False
-                        self.extended_operator_type = None
-                        self.extended_operator_skip_count = 0
-                else:
-                    left_var = variables.pop(0)
-                    right_var = variables.pop(0)
+            elif SymbolType.is_local(keyword):
+                local_variable = self._read_local_variable(f"variable{self.local_var_count}", keyword)
+                variables.append(local_variable)
+            elif ComparatorEnum.is_comparator(keyword):
+                comparator = ComparatorEnum(keyword)
+                
+                if len(variables) >= 2:
+                    # Determine comparator type based on variables
+                    comparator_type = self._determine_comparator_type(variables[0], variables[1])
                     
-                    condition = Level5Condition(
-                        left_operator=left_var,
-                        right_operator=right_var,
-                        compare_operator=compare_operator
-                    )
-                    conditions.append(condition)
+                    # Create a new condition using the first two variables
+                    new_condition = Level5Condition(variables[0], variables[1], comparator, comparator_type)
+                    current_block.append(new_condition)
+                    
+                    # Consume the two variables used
+                    variables.pop(0)
+                    variables.pop(0)
+                else:
+                    print("Warning: not enough variables for comparator")
+            elif keyword == 0x8F:
+                # close current condition block and start a new one
+                
+                if current_block:
+                    conditions.append(current_block)
+                    current_block = []
+        
+        # If there is one variable left at the end, create a condition with == 1
+        if len(variables) == 1:
+            self._create_implicit_condition(variables, current_block)
+        
+        # Append last block if not empty
+        if current_block:
+            conditions.append(current_block)
         
         return conditions
 
-    @staticmethod
-    def get_variable_type_from_raw(memory_type_raw):
-        if memory_type_raw == 0x000100:
-            return Level5VariableType.SubPhase
-        elif memory_type_raw == 0x000A01:
-            return Level5VariableType.BitFlag
-        elif memory_type_raw == 0x000602:
-            return Level5VariableType.Boolean
+    def _create_implicit_condition(self, variables, current_block):
+        """Creates an implicit condition with == 1 for a remaining variable"""
+        # Create a local int variable with the value 1
+        implicit_var = Level5Variable(f"variable{self.local_var_count}", SymbolType.LOCAL_INT, 1)
+        self.local_var_count += 1
+        
+        # Determine comparator type
+        comparator_type = self._determine_comparator_type(variables[0], implicit_var)
+        
+        # Create the condition with the EQUAL operator
+        new_condition = Level5Condition(variables[0], implicit_var, ComparatorEnum.EQUAL, comparator_type)
+        current_block.append(new_condition)
+        
+        # Consume the variable used
+        variables.pop(0)
+
+    def _determine_comparator_type(self, left, right):
+        """Determine the comparator type based on the operands"""
+        # Check if left operand is a function
+        if isinstance(left, Level5Function):
+            return FunctionNameEnum.get_return_type(left.name.value)
+        
+        # Check if right operand is a function
+        if isinstance(right, Level5Function):
+            return FunctionNameEnum.get_return_type(right.name.value)
+        
+        # Default to int if both are variables
+        return "int"
+
+    def _read_local_variable(self, var_name, keyword):
+        if SymbolType.is_local_int(keyword):
+            var_value = self.reader.read_int32()
+            lifetime = SymbolType.LOCAL_INT
+        elif SymbolType.is_local_ident(keyword):
+            var_value = self.reader.read_int32(order='little')
+            lifetime = SymbolType.LOCAL_IDENT
         else:
-            return Level5VariableType.Unknown
+            raise ValueError(f"Invalid keyword: {keyword}")
+        
+        self.local_var_count += 1
+        
+        return Level5Variable(var_name, lifetime, var_value)
 
-    def read_memory_value(self):
-        sub_index_add = 3
+    def _read_function(self):
+        func_name_value = self.reader.read_int32()
         
-        memory_raw = self.reader.read_int32_as_hex()
+        try:
+            func_name = FunctionNameEnum(func_name_value)
+        except ValueError:
+            raise ValueError(f"Unknown function name: 0x{func_name_value:08X}")
         
-        if memory_raw == 0x98EE4B47:
-            vvalue = Level5VariableValue.currentSubPhase
-        elif memory_raw == 0x2A3D4543:
-            vvalue = Level5VariableValue.currentBitFlag
+        func_args = []
+        
+        func_arg_count = FunctionArgEnum.get_arg_count(func_name_value)
+        
+        if func_arg_count is None:
+            raise ValueError(f"No argument count found for function: {func_name.name}")
+        
+        if func_arg_count == 0:
+            self.reader.skip(3)
         else:
-            vvalue = Level5VariableValue.Unknown
-    
-        memory_type_raw = self.reader.read_hex3()
+            self.reader.skip(7)
         
-        extend_operator_test = self.reader.read_byte()
-        if extend_operator_test == 0x28:
-            sub_index_add = 2
-            self.has_extended_operator = True
-            self.extended_operator_type = self.reader.read_hex3()
-            self.extended_operator_skip_count = 0
-        else:
-            self.reader.to_seek(self.reader.get_position() - 1)
+        for i in range(func_arg_count):
+            arg_keyword = self.reader.read_byte()
+            arg = self._read_local_variable(f"variable{self.local_var_count}", arg_keyword)
+            func_args.append(arg)
         
-        vtype = self.get_variable_type_from_raw(memory_type_raw)
-        
-        self.sub_index += sub_index_add
-
-        return Level5Variable(vname=vvalue.value, vtype=vtype, vvalue=vvalue.value)
-
-    def read_custom_value(self):
-        vvalue = self.reader.read_int32()
-        
-        if self.extended_operator_type is not None and self.extended_operator_skip_count == 1:
-            memory_type_raw = self.extended_operator_type
-            vtype = self.get_variable_type_from_raw(memory_type_raw)
-            self.extended_operator_type = None
-            self.extended_operator_skip_count = 0
-        else:
-            vtype = Level5VariableType.Integer
-            if self.extended_operator_type is not None:
-                self.extended_operator_skip_count += 1
-
-        vname = f"variable{self.variable_counter}"
-        self.variable_counter += 1
-        
-        self.sub_index += 2
-
-        return Level5Variable(vname=vname, vtype=vtype, vvalue=vvalue)
+        return Level5Function(func_name, func_args)
