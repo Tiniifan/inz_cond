@@ -25,7 +25,7 @@ class Level5ConditionGUI(QMainWindow):
         self.init_ui()
     
     def init_ui(self):
-        self.setWindowTitle("Level5 Condition Code Generator")
+        self.setWindowTitle("Inazuma Condition Parser")
         self.setGeometry(100, 100, 1400, 800)
         
         central_widget = QWidget()

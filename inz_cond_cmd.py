@@ -6,7 +6,7 @@ from languages.squirrel_language.squirrel_codegenerator import SquirrelCodeGener
 from languages.transformers.code_transformer import CodeTransformer
 
 def main():
-    parser = argparse.ArgumentParser(description="Level5 Condition Code Generator")
+    parser = argparse.ArgumentParser(description="Inazuma Condition Parser")
     parser.add_argument("-d", "--data", required=True, help="Base64 encoded condition file")
     parser.add_argument("-sq", "--squirrel", action="store_true", help="Generate Squirrel code instead of C")
     parser.add_argument("-c", "--c", action="store_true", help="Force C code generation (default)")
