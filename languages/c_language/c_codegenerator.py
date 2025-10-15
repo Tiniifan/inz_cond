@@ -1,17 +1,22 @@
 import os
 import sys
 
-level5_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../level5"))
-if level5_path not in sys.path:
-    sys.path.insert(0, level5_path)
+# Add root path to sys.path
+root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
 
-from logic import *
+from level_5.condition.logic import *
 
 class CCodeGenerator:
     def __init__(self, conditions):
+        """
+        conditions: List of lists of Level5Condition
+        Each inner list represents an if block
+        Multiple conditions in same list = && combination
+        """
         self.conditions = conditions
-        self.declared_variables = set()
-    
+        
     def generate(self):
         code_lines = []
         
@@ -29,11 +34,8 @@ class CCodeGenerator:
             code_lines.append("}")
             return "\n".join(code_lines)
         
-        # Declare all necessary variables
-        self._declare_variables(code_lines)
-        
-        # Generate conditions
-        self._generate_recursive(self.conditions, 0, code_lines, indent=1)
+        # Generate condition blocks (separate if statements)
+        self._generate_condition_blocks(code_lines)
         
         # Return statement
         code_lines.append("    return result;")
@@ -41,151 +43,86 @@ class CCodeGenerator:
         
         return "\n".join(code_lines)
     
-    def _declare_variables(self, code_lines):
-        """Declares all variables used in conditions"""
-        for condition in self.conditions:
-            # Check left operand
-            self._declare_if_needed(condition.left_operator, code_lines)
-            
-            # Check right operand
-            if isinstance(condition.right_operator, list):
-                # If it's a list of conditions (BitFlag case)
-                for sub_condition in condition.right_operator:
-                    self._declare_if_needed(sub_condition.left_operator, code_lines)
-                    
-                    if sub_condition.right_operator:
-                        self._declare_if_needed(sub_condition.right_operator, code_lines)
-            else:
-                self._declare_if_needed(condition.right_operator, code_lines)
+    def _generate_condition_blocks(self, code_lines):
+        """Generates separate if blocks for each condition list"""
+        for condition_block in self.conditions:
+            self._generate_single_if_block(condition_block, code_lines)
     
-    def _declare_if_needed(self, operand, code_lines):
-        """Declares a variable if necessary"""
-        if isinstance(operand, Level5Variable):
-            # Don't declare "system" variables like currentSubPhase
-            if operand.vname not in self.declared_variables and \
-               not operand.vname.startswith('current'):
-                
-                # Determine C type based on Level5 type
-                c_type = self._get_c_type(operand.vtype)
-                
-                # Determine value
-                value = self._get_variable_value(operand)
-                
-                # Generate declaration with base indentation
-                code_lines.append(f"    {c_type} {operand.vname} = {value};")
-                self.declared_variables.add(operand.vname)
-    
-    def _get_c_type(self, vtype):
-        """Converts a Level5 type to C type"""
-        type_mapping = {
-            Level5VariableType.Integer: "int",
-            Level5VariableType.Boolean: "bool",
-            Level5VariableType.BitFlag: "int",
-            Level5VariableType.SubPhase: "SubPhase",
-        }
-        return type_mapping.get(vtype, "int")
-    
-    def _get_variable_value(self, variable):
-        """Gets the value of a variable"""
-        # Special case: Boolean with integer value
-        if variable.vtype == Level5VariableType.Boolean:
-            if hasattr(variable, 'vvalue'):
-                if isinstance(variable.vvalue, bool):
-                    return "true" if variable.vvalue else "false"
-                elif isinstance(variable.vvalue, int):
-                    return "true" if variable.vvalue != 0 else "false"
-            return "false"
-        
-        # Normal case for other types
-        if hasattr(variable, 'vvalue') and isinstance(variable.vvalue, int):
-            return str(variable.vvalue)
-        elif isinstance(variable.vvalue, bool):
-            return "true" if variable.vvalue else "false"
-        else:
-            return "0"
-    
-    def _generate_recursive(self, conditions, index, code_lines, indent=0):
-        current = conditions[index]
-        ind = "    " * indent
-        
-        # Special case: BitFlag with list of conditions
-        if isinstance(current.left_operator, Level5Variable) and \
-           current.left_operator.vtype == Level5VariableType.BitFlag and \
-           isinstance(current.right_operator, list):
-            
-            self._generate_bitflag_condition(current, code_lines, indent, index)
+    def _generate_single_if_block(self, condition_list, code_lines):
+        """Generates a single if block with && conditions"""
+        if not condition_list:
             return
         
-        # Normal case
-        left = self._format_operand(current.left_operator)
-        right = self._format_operand(current.right_operator)
-        op = current.compare_operator.value if current.compare_operator else "=="
+        indent = "    "
         
-        code_lines.append(f"{ind}if ({left} {op} {right}) {{")
+        # Build the condition expression
+        condition_parts = []
+        for condition in condition_list:
+            condition_str = self._format_condition(condition)
+            condition_parts.append(condition_str)
         
-        if index + 1 < len(conditions):
-            self._generate_recursive(conditions, index + 1, code_lines, indent + 1)
-        else:
-            code_lines.append(f"{ind}    result = true;")
+        # Combine with &&
+        full_condition = " && ".join(condition_parts)
         
-        code_lines.append(f"{ind}}}")
+        # Generate if statement
+        code_lines.append(f"{indent}if ({full_condition}) {{")
+        code_lines.append(f"{indent}    result = true;")
+        code_lines.append(f"{indent}}}")
     
-    def _generate_bitflag_condition(self, condition, code_lines, indent, index):
-        """Generates specific code for BitFlag conditions"""
-        ind = "    " * indent
-        bitflag_conditions = condition.right_operator
+    def _format_condition(self, condition):
+        """Formats a condition with boolean simplification"""
+        left = self._format_operand(condition.operator_left)
+        right = self._format_operand(condition.operator_right)
+        comparator = ComparatorEnum.to_string(condition.comparator.value)
         
-        # First condition: variable0 (the bitflag ID)
-        first_cond = bitflag_conditions[0]
-        variable_name = first_cond.left_operator.vname  # e.g. variable0
-        op = condition.compare_operator.value if condition.compare_operator else ">="
+        # Simplification for boolean comparisons
+        if condition.comparator_type == "bool" and condition.comparator == ComparatorEnum.EQUAL:
+            # Check if right operand is a variable with value 1 or 0
+            if isinstance(condition.operator_right, Level5Variable):
+                if condition.operator_right.value == 1:
+                    # Simplify "== 1" to just the left operand
+                    return left
+                elif condition.operator_right.value == 0:
+                    # Simplify "== 0" to "!" + left operand
+                    return f"!{left}"
+            
+            # Check if left operand is a variable with value 1 or 0
+            if isinstance(condition.operator_left, Level5Variable):
+                if condition.operator_left.value == 1:
+                    # Simplify "1 ==" to just the right operand
+                    return right
+                elif condition.operator_left.value == 0:
+                    # Simplify "0 ==" to "!" + right operand
+                    return f"!{right}"
         
-        code_lines.append(f"{ind}if (getLastGlobalBitFlag() {op} {variable_name}) {{")
-        
-        # If there's a second condition (bit value verification)
-        if len(bitflag_conditions) > 1:
-            second_cond = bitflag_conditions[1]
-            flag_var_name = f"flag_{variable_name}"
-            value_var_name = second_cond.left_operator.vname
-            
-            # Get bitflag value using C function
-            code_lines.append(f"{ind}    bool {flag_var_name} = getGlobalBitFlag({variable_name});")
-            
-            # Generate comparison
-            compare_op = "=="
-            code_lines.append(f"{ind}    if ({flag_var_name} {compare_op} {value_var_name}) {{")
-            
-            # Set result or continue recursion
-            if index + 1 < len(self.conditions):
-                self._generate_recursive(self.conditions, index + 1, code_lines, indent + 2)
-            else:
-                code_lines.append(f"{ind}        result = true;")
-            
-            code_lines.append(f"{ind}    }}")
-        else:
-            # No value verification, set result or continue
-            if index + 1 < len(self.conditions):
-                self._generate_recursive(self.conditions, index + 1, code_lines, indent + 1)
-            else:
-                code_lines.append(f"{ind}    result = true;")
-        
-        code_lines.append(f"{ind}}}")
+        # Default format: left comparator right
+        return f"{left} {comparator} {right}"
     
     def _format_operand(self, operand):
         """Formats an operand for C code"""
         if isinstance(operand, Level5Variable):
-            # Replace system variables with C function calls
-            if operand.vname == "currentSubPhase":
-                return "getGameSubPhase()"
-            elif operand.vname == "currentBitFlag":
-                return "getLastGlobalBitFlag()"
-            else:
-                return operand.vname
-        elif isinstance(operand, bool):
-            return "true" if operand else "false"
-        elif isinstance(operand, int):
-            return str(operand)
-        elif operand is None:
-            return "0"
+            # Return the value directly instead of the variable name
+            return str(operand.value)
+        elif isinstance(operand, Level5Function):
+            return self._format_function(operand)
         else:
             return str(operand)
+    
+    def _format_function(self, function):
+        """Formats a function call for C code"""
+        func_name_str = FunctionNameEnum.to_string(function.name.value)
+        
+        if not func_name_str:
+            func_name_str = function.name.name
+        
+        # Format arguments
+        args = []
+        for arg in function.args:
+            if isinstance(arg, Level5Variable):
+                # Use the value directly instead of the variable name
+                args.append(str(arg.value))
+            else:
+                args.append(str(arg))
+        
+        args_str = ", ".join(args)
+        return f"{func_name_str}({args_str})"
