@@ -36,7 +36,11 @@ class CodeBeautifier:
                 elif self._is_assignment(stripped) and next_line.startswith('if'):
                     result.append('')
                 
-                # Rule 3: Before a return (except right after an opening brace)
+                # Rule 3: After a closing brace of an if block, before another if
+                elif stripped == '}' and next_line.startswith('if'):
+                    result.append('')
+                
+                # Rule 4: Before a return (except right after an opening brace)
                 elif next_line.startswith('return') and not stripped.endswith('{'):
                     # Check that we're not right after the function opening
                     if i > 0 and not lines[i - 1].strip().endswith('{'):
