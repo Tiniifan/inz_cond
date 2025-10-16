@@ -9,7 +9,6 @@ if root_path not in sys.path:
 
 # Import from root
 from tools.binary_reader import BinaryDataReader
-from tools.binary_writer import BinaryDataWriter
 from level_5.condition.logic import *
 
 class Level5ConditionDecoder:
