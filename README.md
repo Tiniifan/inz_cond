@@ -8,6 +8,8 @@ The tool can do:
 * Converting **Base64-encoded condition data** into editable code.
 * Converting **human-readable code back into Base64** for use in the game.
 
+For Windows users: A graphical version (GUI) of the tool is available and can be downloaded as a .exe from the [release page](https://github.com/Tiniifan/inz_cond/releases)
+
 ## Overview
 
 Level-5 condition data is stored as **Base64-encoded binary**.
