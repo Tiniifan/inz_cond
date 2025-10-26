@@ -17,21 +17,25 @@ class InzCondGUI(QMainWindow):
         # Controllers
         self.file_controller = FileController()
         self.code_controller = CodeController()
-        
-        # Status
-        self.initial_base64 = initial_base64
-        self.output_mode = output_mode
-        self.current_language = "C"
-        self.c_highlighter = None
-        self.squirrel_highlighter = None
-        
+
         # Load data
         self.file_controller.load_templates()
         self.file_controller.load_or_create_playground_data()
         
+        # Status
+        self.initial_base64 = initial_base64
+        self.output_mode = output_mode
+        self.current_language = self.file_controller.get_saved_language()
+        self.c_highlighter = None
+        self.squirrel_highlighter = None
+        
         # Initialize the UI
         self.init_ui()
-                
+        
+        # Set playground as the default current file
+        playground_path = str(Path.cwd() / "playground.inzcond")
+        self.file_controller.current_file = playground_path        
+
         # If an initial base64 is provided
         if self.initial_base64:
             self.editor_widget.set_base64(self.initial_base64)
@@ -70,7 +74,11 @@ class InzCondGUI(QMainWindow):
         self.editor_widget.try_requested.connect(self._on_try_requested)
         self.editor_widget.language_changed.connect(self._on_language_changed)
         self.editor_widget.code_changed.connect(self._on_code_changed)
-        self.c_highlighter = CSyntaxHighlighter(self.editor_widget.code_editor.document())
+        self.editor_widget.language_combo.setCurrentText(self.current_language)
+        if self.current_language == "C":
+            self.c_highlighter = CSyntaxHighlighter(self.editor_widget.code_editor.document())
+        else:
+            self.squirrel_highlighter = SquirrelSyntaxHighlighter(self.editor_widget.code_editor.document())
         content_splitter.addWidget(self.editor_widget)
         
         content_splitter.setStretchFactor(1, 1)
@@ -197,6 +205,9 @@ class InzCondGUI(QMainWindow):
         current_code = self.editor_widget.get_code().strip()
         old_language = self.current_language
         self.current_language = language
+
+        # Save selected language
+        self.file_controller.save_language(language)
         
         # Change the syntax highlighter
         if language == "C":

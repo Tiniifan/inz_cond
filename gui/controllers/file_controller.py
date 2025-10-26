@@ -35,6 +35,7 @@ class FileController:
     def load_or_create_playground_data(self):
         """Load or create the playground.json file"""
         default_data = {
+            "LANGUAGE": "C",
             "SUB_PHASE_VALUE": 0,
             "PHASE_VALUE": 0,
             "CHAPTER_VALUE": 0,
@@ -55,6 +56,19 @@ class FileController:
             try:
                 with open(self.playground_json, 'r') as f:
                     self.playground_data = json.load(f)
+                
+                # Check and add any missing keys
+                updated = False
+                for key, default_value in default_data.items():
+                    if key not in self.playground_data:
+                        self.playground_data[key] = default_value
+                        updated = True
+                
+                # Save only if changes have been made
+                if updated:
+                    with open(self.playground_json, 'w') as f:
+                        json.dump(self.playground_data, f, indent=4)
+                        
             except Exception:
                 self.playground_data = default_data
         
@@ -69,6 +83,20 @@ class FileController:
             return True
         except Exception as e:
             return False, str(e)
+
+    def save_language(self, language):
+        """Save the current language to playground.json"""
+        try:
+            self.playground_data["LANGUAGE"] = language
+            with open(self.playground_json, 'w') as f:
+                json.dump(self.playground_data, f, indent=4)
+            return True
+        except Exception as e:
+            return False, str(e)
+
+    def get_saved_language(self):
+        """Get the saved language from playground.json"""
+        return self.playground_data.get("LANGUAGE", "C")
     
     def is_playground(self, file_path):
         """Check if it's the playground file"""
