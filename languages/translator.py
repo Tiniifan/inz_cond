@@ -5,21 +5,26 @@ class Translator:
     """Translates code between C and Squirrel languages"""
     
     def __init__(self):
-        # Mapping des fonctions C (PascalCase) vers Squirrel (CMND_UPPER_SNAKE_CASE)
+        # Mapping C functions (PascalCase) to Squirrel (CMND_UPPER_SNAKE_CASE)
         self.c_to_squirrel_mapping = {
             'GetSubPhase': 'CMND_GET_SUB_PHASE',
             'GetPhase': 'CMND_GET_PHASE',
-            'GetChapter': 'CMND_GET_CHAPTER',
-            'GetFrameChapter': 'CMND_GET_FRAME_CHAPTER',
-            'IsShopOpen': 'CMND_IS_SHOP_OPEN',
-            'GetTempBitFlag': 'CMND_GET_TEMP_BIT_FLAG',
-            'GetTempMapBitFlag': 'CMND_GET_TEMP_MAP_BIT_FLAG',
+            'GetTRouteFlag': 'CMND_GET_T_ROUTE_FLAG',
+            'GetTempMapByteFlag': 'CMND_GET_TEMP_MAP_BYTE_FLAG',
+            'GetTempByteFlag': 'CMND_GET_TEMP_BYTE_FLAG',
+            'GetGlobalCharaMetFlag': 'CMND_GET_GLOBAL_CHARA_MET_FLAG',
             'GetGlobalBitFlag': 'CMND_GET_GLOBAL_BIT_FLAG',
+            'GetTempMapBitFlag': 'CMND_GET_TEMP_MAP_BIT_FLAG',
+            'GetTempBitFlag': 'CMND_GET_TEMP_BIT_FLAG',
             'GetGlobalTBoxFlag': 'CMND_GET_GLOBAL_T_BOX_FLAG',
-            'HaveItem': 'CMND_HAVE_ITEM'
+            'IsHaveItem': 'CMND_IS_HAVE_ITEM',
+            'CheckShopOpen': 'CMND_CHECK_SHOP_OPEN',
+            'GetGameVersion': 'CMND_GET_GAME_VERSION',
+            'GetFrameChapter': 'CMND_GET_FRAME_CHAPTER',
+            'GetChapter': 'CMND_GET_CHAPTER'
         }
         
-        # Mapping inverse pour Squirrel vers C
+        # Reverse mapping for Squirrel to C
         self.squirrel_to_c_mapping = {v: k for k, v in self.c_to_squirrel_mapping.items()}
     
     def c_to_squirrel(self, c_code):
