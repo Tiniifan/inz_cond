@@ -11,7 +11,7 @@ from languages.c_language.c_syntaxhighlighter import CSyntaxHighlighter
 from languages.squirrel_language.squirrel_syntaxhighlighter import SquirrelSyntaxHighlighter
 
 class InzCondGUI(QMainWindow):
-    def __init__(self, initial_base64=None):
+    def __init__(self, initial_base64=None, output_mode=False):
         super().__init__()
         
         # Controllers
@@ -20,6 +20,7 @@ class InzCondGUI(QMainWindow):
         
         # Status
         self.initial_base64 = initial_base64
+        self.output_mode = output_mode
         self.current_language = "C"
         self.c_highlighter = None
         self.squirrel_highlighter = None
@@ -231,18 +232,22 @@ class InzCondGUI(QMainWindow):
     def closeEvent(self, event):
         """Manages the closing of the application"""
         try:
-            code = self.editor_widget.get_code().strip()
-            
-            # If launched with an initial base64, we want to get the new base64
-            if self.initial_base64 is not None and code:           
-                encoded, error = self.code_controller.encode_code(code, self.current_language)
-
-                if encoded:
-                    print(encoded)
+            # If output mode is enabled
+            if self.output_mode:
+                code = self.editor_widget.get_code().strip()
+                
+                # If there is code, encode it
+                if code:           
+                    encoded, error = self.code_controller.encode_code(code, self.current_language)
+                    if encoded:
+                        print(encoded)
+                    else:
+                        # Encoding error
+                        print(-1)
                 else:
-                    print(self.initial_base64)
-
+                    # No code
+                    print(-1)
         except Exception:
-            pass
+            print(-1)
         
         event.accept()
