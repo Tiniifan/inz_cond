@@ -41,23 +41,25 @@ bool condition()
 }
 ```
 
-## Supported Condition Types
+## Supported Functions
 
-Currently supported condition types:
-
-* `SubPhase`
-* `BitFlag`
-* `TeamFlag`
-* `HaveItem`
-
-The following functions are referenced in the generated code:
-
-| Function                     | Game Command (CMND)          | Description                                                                                                                                                         |
-| ---------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getGameSubPhase()`          | `CMND_GET_SUB_PHASE()`       | Returns the current game sub-phase.                                                                                                                                 |
-| `getGlobalBitFlag(flag)`     | `CMND_GET_GLOBAL_BIT_FLAG()` | Returns true or false depending on whether the given bit flag is active.                                                                                            |
-| `getTeamBitFlag(flag)`       | `Doesn't exist`              | Returns true or false depending on whether the team bit flag is active.                                                                                             |
-| `isHaveItem(itemID)`         | `CMND_IS_HAVE_ITEM()`        | Returns true or false depending on whether the item is owned.                                                                                                       |
+| Function (C)                 | Function (Squirrel)                | Description                                                                                  |
+| ---------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| `GetSubPhase()`              | `CMND_GET_SUB_PHASE()`             | Returns the current sub-phase of the game.                                                   |
+| `GetPhase()`                 | `CMND_GET_PHASE()`                 | Returns the current main phase of the game.                                                  |
+| `GetTRouteFlag(flagID)`      | `CMND_GET_T_ROUTE_FLAG()`          | Returns true or false depending on whether the specified route flag is active.               |
+| `GetTempMapByteFlag(flagID)` | `CMND_GET_TEMP_MAP_BYTE_FLAG()`    | Returns the temporary map byte flag value for the given ID.                                  |
+| `GetTempByteFlag(flagID)`    | `CMND_GET_TEMP_BYTE_FLAG()`        | Returns the temporary byte flag value for the given ID.                                      |
+| `GetGlobalCharaMetFlag(id)`  | `CMND_GET_GLOBAL_CHARA_MET_FLAG()` | Returns true or false depending on whether the specified character has been met globally.    |
+| `GetGlobalBitFlag(flagID)`   | `CMND_GET_GLOBAL_BIT_FLAG()`       | Returns true or false depending on whether the specified global bit flag is set.             |
+| `GetTempMapBitFlag(flagID)`  | `CMND_GET_TEMP_MAP_BIT_FLAG()`     | Returns true or false depending on whether the specified temporary map bit flag is active.   |
+| `GetTempBitFlag(flagID)`     | `CMND_GET_TEMP_BIT_FLAG()`         | Returns true or false depending on whether the specified temporary bit flag is active.       |
+| `GetGlobalTBoxFlag(flagID)`  | `CMND_GET_GLOBAL_T_BOX_FLAG()`     | Returns true or false depending on whether the specified global treasure box flag is active. |
+| `IsHaveItem(itemID)`         | `CMND_IS_HAVE_ITEM()`              | Returns true or false depending on whether the player owns the specified item.               |
+| `CheckShopOpen(shopID)`      | `CMND_CHECK_SHOP_OPEN()`           | Returns true or false depending on whether the specified shop is currently open.             |
+| `GetGameVersion()`           | `CMND_GET_GAME_VERSION()`          | Returns the current game version identifier.                                                 |
+| `GetFrameChapter()`          | `CMND_GET_FRAME_CHAPTER()`         | Returns the current frame chapter number of the game.                                        |
+| `GetChapter()`               | `CMND_GET_CHAPTER()`               | Returns the current chapter number of the game.                                              |
 
 ## Game Compatibility
 - **Inazuma Eleven Go** ✅
@@ -113,13 +115,20 @@ python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -sq
 
 A graphical version of the tool is available to easily decode and visualize the condition code.
 
+Compared to the command-line version, the GUI offers several additional features:
+
+* A simple and intuitive interface to convert Base64 strings into readable code, and perform the reverse operation just as easily.
+* Syntax highlighting based on the selected language, making the condition code easier to read and analyze.
+* The ability to set and modify parameters to simulate and test code behavior directly within the interface.
+* Support for `.inzcond` files from the **template** folder, providing built-in guidance and examples for understanding condition structures.
+
 You can start the GUI using this command
 
 ```bash
 python level5_condition_gui.py
 ```
 
-<img width="1390" height="823" alt="image" src="https://github.com/user-attachments/assets/0df56417-f4a3-430d-8251-5e09825cbf1d" />
+<img width="1593" height="925" alt="image" src="https://github.com/user-attachments/assets/720d9efd-262b-47fa-9c36-7207c3f6c099" />
 
 Please note: you need PyQt6 to use this version
 
@@ -128,8 +137,7 @@ Please note: you need PyQt6 to use this version
 * [n123git](https://github.com/n123git) for giving me detailed explanations about the format. I recommend [his version of condition parser optimize for ykw](https://github.com/n123git/yw-cond)
 
 ## Notes
-* It's not possible to convert code to base64 at this time.
 * The tool can make mistakes, the logic was written by a human :)
-* This tool is intended for research and educational purposes
+* This tool is intended for research and educational purposes.
 * It does not modify or execute any game content.
 * The generated code is fictitious, it's just a representation of how the engine works.
