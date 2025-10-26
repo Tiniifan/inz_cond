@@ -1,7 +1,12 @@
 # Inazuma Condition Parser
 
-`inz_cond` is a **Python tool** that converts the internal condition data used in Level-5 Nintendo 3DS games into **human-readable code**.  
-These conditions are used by the game engine to determine when characters, talk events, quests, or other in-game elements should appear.
+`inz_cond` is a **Python tool** that interprets the internal condition data used in Level-5 Nintendo 3DS games.  
+These conditions determine when characters, talk events, quests, or other in-game elements should appear.
+
+The tool can do:
+
+* Converting **Base64-encoded condition data** into editable code.
+* Converting **human-readable code back into Base64** for use in the game.
 
 ## Overview
 
@@ -110,6 +115,10 @@ python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -c
 ```bash
 python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -sq
 ```
+
+#### Generate Base64
+
+You cannot convert code to base64 with the CMD version.
 
 ## Graphical User Interface (GUI)
 
