@@ -17,3 +17,5 @@ version.txt
 
 *.zip
 *.rar
+
+/releases/
