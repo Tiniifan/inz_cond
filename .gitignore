@@ -9,3 +9,8 @@ test_input.txt
 test_output.txt
 
 playground.json
+
+version.txt
+/build/
+/dist/
+*.spec
