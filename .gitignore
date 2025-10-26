@@ -4,3 +4,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+test_input.txt
+test_output.txt
+
+playground.json
