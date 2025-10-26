@@ -1,7 +1,12 @@
 # Inazuma Condition Parser
 
-`inz_cond` is a **Python tool** that converts the internal condition data used in Level-5 Nintendo 3DS games into **human-readable code**.  
-These conditions are used by the game engine to determine when characters, talk events, quests, or other in-game elements should appear.
+`inz_cond` is a **Python tool** that interprets the internal condition data used in Level-5 Nintendo 3DS games.  
+These conditions determine when characters, talk events, quests, or other in-game elements should appear.
+
+The tool can do:
+
+* Converting **Base64-encoded condition data** into editable code.
+* Converting **human-readable code back into Base64** for use in the game.
 
 ## Overview
 
@@ -111,6 +116,10 @@ python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -c
 python inz_cond_cmd.py -d AAAAAA8FNZjuS0cAAQAyBfZ9Sng= -sq
 ```
 
+#### Generate Base64
+
+You cannot convert code to base64 with the CMD version.
+
 ## Graphical User Interface (GUI)
 
 A graphical version of the tool is available to easily decode and visualize the condition code.
@@ -134,7 +143,7 @@ Please note: you need PyQt6 to use this version
 
 ## Special Thanks
 
-* [n123git](https://github.com/n123git) for giving me detailed explanations about the format. I recommend [his version of condition parser optimize for ykw](https://github.com/n123git/yw-cond)
+* [n123git](https://github.com/n123git) for giving me detailed explanations about the format. I recommend [his version of condition parser optimized for ykw](https://github.com/n123git/yw-cond)
 
 ## Notes
 * The tool can make mistakes, the logic was written by a human :)
