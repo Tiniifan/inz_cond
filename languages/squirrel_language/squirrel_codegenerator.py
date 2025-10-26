@@ -16,10 +16,21 @@ class SquirrelCodeGenerator:
         
         # Mapping of C function names to Squirrel function names
         self.function_mapping = {
-            'getGameSubPhase': 'CMND_GET_GAME_SUB_PHASE',
-            'getGlobalBitFlag': 'CMND_GET_GLOBAL_BIT_FLAG',
-            'getTeamBitFlag': 'CMND_GET_TEAM_BIT_FLAG',
-            'isHaveItem': 'CMND_IS_HAVE_ITEM'
+            'GetSubPhase': 'CMND_GET_SUB_PHASE',
+            'GetPhase': 'CMND_GET_PHASE',
+            'GetTRouteFlag': 'CMND_GET_T_ROUTE_FLAG',
+            'GetTempMapByteFlag': 'CMND_GET_TEMP_MAP_BYTE_FLAG',
+            'GetTempByteFlag': 'CMND_GET_TEMP_BYTE_FLAG',
+            'GetGlobalCharaMetFlag': 'CMND_GET_GLOBAL_CHARA_MET_FLAG',
+            'GetGlobalBitFlag': 'CMND_GET_GLOBAL_BIT_FLAG',
+            'GetTempMapBitFlag': 'CMND_GET_TEMP_MAP_BIT_FLAG',
+            'GetTempBitFlag': 'CMND_GET_TEMP_BIT_FLAG',
+            'GetGlobalTBoxFlag': 'CMND_GET_GLOBAL_T_BOX_FLAG',
+            'IsHaveItem': 'CMND_IS_HAVE_ITEM',
+            'CheckShopOpen': 'CMND_CHECK_SHOP_OPEN',
+            'GetGameVersion': 'CMND_GET_GAME_VERSION',
+            'GetFrameChapter': 'CMND_GET_FRAME_CHAPTER',
+            'GetChapter': 'CMND_GET_CHAPTER'
         }
     
     def generate(self):
