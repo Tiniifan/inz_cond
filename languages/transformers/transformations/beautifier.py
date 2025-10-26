@@ -9,6 +9,9 @@ class CodeBeautifier:
         """
         Formats code by adding blank lines according to specific rules.
         """
+        # First, remove unnecessary parentheses
+        code = self._remove_unnecessary_parentheses(code)
+        
         lines = code.split('\n')
         result = []
         i = 0
@@ -49,6 +52,35 @@ class CodeBeautifier:
             i += 1
         
         return '\n'.join(result)
+    
+    def _remove_unnecessary_parentheses(self, code):
+        """
+        Removes unnecessary parentheses inside conditions.
+        """
+        pattern = r'\(\s*([^\(\)]+?(?:\(.*?\))?[^\(\)]*?)\s*\)'
+        
+        prev_code = None
+        while prev_code != code:
+            prev_code = code
+
+            def replacer(match):
+                start = match.start()
+                # Check whether the parenthesis is preceded by a control keyword.
+                before = code[max(0, start - 10):start]
+
+                if re.search(r'\b(if|while|for|switch)\s*$', before):
+                    return match.group(0)
+                
+                inner = match.group(1)
+
+                if '||' in inner or '&&' in inner:
+                    return '(' + inner + ')'
+                
+                return inner
+
+            code = re.sub(pattern, replacer, code)
+
+        return code
     
     def _is_result_declaration(self, line):
         """Detects the result variable declaration (bool result = false or local result = false)."""
