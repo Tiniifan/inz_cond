@@ -45,6 +45,12 @@ class BinaryDataReader:
     def read_int24(self, order=None):
         byte_order = order if order else self._order
         return int.from_bytes(self.read_bytes(3), byteorder=byte_order)
+
+    def peek_byte(self):
+        if self.offset < self.length:
+            return self.data[self.offset]
+
+        return None
     
     def skip(self, length):
         if self._offset + length > len(self.data):
