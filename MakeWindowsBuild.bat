@@ -46,40 +46,44 @@ if "%part4%"=="" (
 :: Get the current year from system date
 for /f "tokens=3 delims=/ " %%a in ("%date%") do set year=%%a
 
-:: Create the version.txt file
-(
-echo # UTF-8
-echo VSVersionInfo^(
-echo   ffi=FixedFileInfo^(
-echo     filevers=(%version%),
-echo     prodvers=(%version%),
-echo     mask=0x3f,
-echo     flags=0x0,
-echo     OS=0x4,
-echo     fileType=0x1,
-echo     subtype=0x0,
-echo     date=(0,0)^
-echo     ),
-echo   kids=^[
-echo     StringFileInfo^(
-echo       ^[
-echo       StringTable^(
-echo         '040904B0',
-echo         ^[
-echo         StringStruct('CompanyName', 'Tinifan'),
-echo         StringStruct('FileDescription', 'Inazuma Eleven Condition Compiler & Decompiler'),
-echo         StringStruct('FileVersion', '%version%'),
-echo         StringStruct('InternalName', 'inz_cond'),
-echo         StringStruct('LegalCopyright', 'Copyright © Tinifan %year%'),
-echo         StringStruct('OriginalFilename', 'inz_cond_gui.exe'),
-echo         StringStruct('ProductName', 'inz_cond'),
-echo         StringStruct('ProductVersion', '%version%')^]
-echo       )^]
-echo       )^],
-echo     VarFileInfo^([VarStruct('Translation', [1033, 1200])])^
-echo   ]^
-echo ^)
-) > version.txt
+:: Delete existing version.txt if it exists
+if exist version.txt del /f /q version.txt
+
+:: Convert version string to tuple format
+set filever=%part1%,%part2%,%part3%,%part4%
+
+:: Create version.txt
+echo # UTF-8 > version.txt
+echo VSVersionInfo^( >> version.txt
+echo   ffi=FixedFileInfo^( >> version.txt
+echo     filevers=(%filever%), >> version.txt
+echo     prodvers=(%filever%), >> version.txt
+echo     mask=0x3f, >> version.txt
+echo     flags=0x0, >> version.txt
+echo     OS=0x4, >> version.txt
+echo     fileType=0x1, >> version.txt
+echo     subtype=0x0, >> version.txt
+echo     date=(0,0)^ >> version.txt
+echo     ), >> version.txt
+echo   kids=^[ >> version.txt
+echo     StringFileInfo^( >> version.txt
+echo       ^[ >> version.txt
+echo       StringTable^( >> version.txt
+echo         '040904B0', >> version.txt
+echo         ^[ >> version.txt
+echo         StringStruct('CompanyName', 'Tinifan'), >> version.txt
+echo         StringStruct('FileDescription', 'Inazuma Eleven Condition Compiler ^& Decompiler'), >> version.txt
+echo         StringStruct('FileVersion', '%version%'), >> version.txt
+echo         StringStruct('InternalName', 'inz_cond'), >> version.txt
+echo         StringStruct('LegalCopyright', 'Copyright ^© Tinifan %year%'), >> version.txt
+echo         StringStruct('OriginalFilename', 'inz_cond_gui.exe'), >> version.txt
+echo         StringStruct('ProductName', 'inz_cond'), >> version.txt
+echo         StringStruct('ProductVersion', '%version%')^] >> version.txt
+echo       )^] >> version.txt
+echo       ), >> version.txt
+echo     VarFileInfo^([VarStruct('Translation', [1033, 1200])])^ >> version.txt
+echo   ]^ >> version.txt
+echo ^) >> version.txt
 
 :: Run PyInstaller to build the executable
 pyinstaller --onefile --windowed --version-file=version.txt inz_cond_gui.py
