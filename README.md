@@ -134,7 +134,7 @@ Please note: you need PyQt6 to use this version
 
 ## Special Thanks
 
-* [n123git](https://github.com/n123git) for giving me detailed explanations about the format. I recommend [his version of condition parser optimize for ykw](https://github.com/n123git/yw-cond)
+* [n123git](https://github.com/n123git) for giving me detailed explanations about the format. I recommend [his version of condition parser optimized for ykw](https://github.com/n123git/yw-cond)
 
 ## Notes
 * The tool can make mistakes, the logic was written by a human :)
